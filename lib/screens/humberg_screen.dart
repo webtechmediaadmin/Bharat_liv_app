@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
+import '../constant/app_preferences.dart';
 import '../services/user_profile.dart';
+import 'auth_screens/login_screen.dart';
 import 'profile/history_screen.dart';
 import 'profile/profile_detail.dart';
 import 'profile/subscription.dart';
@@ -305,7 +308,12 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
                       const SizedBox(
                         height: 10,
                       ),
-                      _buildText("assets/images/vec8.png", "Log Out")
+                      GestureDetector(
+                          onTap: () {
+                            showLogoutDialog(context);
+                          },
+                          child:
+                              _buildText("assets/images/vec8.png", "Log Out"))
                     ],
                   )),
             ),
@@ -337,6 +345,101 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xffFFFFFF),
+                // gradient: const LinearGradient(
+                //   begin: Alignment.topCenter,
+                //   end: Alignment.bottomCenter,
+                //   colors: [
+                //     Color(0xFF70CB74),
+                //     Color(0xFF354F33),
+                //   ], // Adjust gradient colors as needed
+                // ),
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Padding(
+                    padding: const EdgeInsets.all(18.0),
+                    child: Center(
+                      child: Text(
+                        'Log out of your account?',
+                        style: TextStyle(
+                          color: Color(0xff000000),
+                          fontSize: 15.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+                  GestureDetector(
+                    onTap: () {
+                      EasyLoading.show();
+                      Future.delayed(const Duration(seconds: 1), () {
+                        PreferencesApp().removePreferences();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                        EasyLoading.dismiss();
+                      });
+                    },
+                    child: const Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Text(
+                          'Log out',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Color(0xff890289),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Center(
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 15,
+                          color: Color(0xff000000),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.0),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,10 +1,10 @@
+
 import 'dart:ui';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
-
 import '../services/user_profile.dart';
 import 'bottom_nav_screen.dart';
 import 'profile/subscription.dart';
@@ -80,6 +80,10 @@ class _VideoAppState extends State<VideoApp> {
       }
     }
   }
+
+   
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -176,6 +180,16 @@ class _VideoAppState extends State<VideoApp> {
                             color: Colors.white, // Notification icon color
                           ),
                           onPressed: () {
+                            print("download");
+                         //  _downloadVideo();
+                             Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BottomNavBar(currentIndex: 2, 
+                                     
+                                  ),
+                                ),
+                              );
                             // Add your notification icon onPressed action here
                           },
                         ): const SizedBox(),

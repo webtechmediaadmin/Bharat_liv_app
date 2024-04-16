@@ -1,13 +1,79 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class DownloadScreen extends StatefulWidget {
-  const DownloadScreen({super.key});
+  String? id;
+  String? videoTitle, videoName;
+  DownloadScreen({
+    Key? key,
+     this.id,
+     this.videoName,
+     this.videoTitle
+  }) : super(key: key);
 
   @override
   State<DownloadScreen> createState() => _DownloadScreenState();
 }
 
 class _DownloadScreenState extends State<DownloadScreen> {
+
+   Future<void> _downloadVideo(String id, videoTitle, videoName) async {
+    String videoUrl = videoTitle; // URL of the video to download
+    String fileName = videoName; // Name of the file
+
+    // Get temporary directory for storing the downloaded file
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+
+    // Create file path
+    String filePath = '$tempPath/$fileName';
+
+    // Check if the file already exists
+    File file = File(filePath);
+    if (await file.exists()) {
+      // If file already exists, show message to user
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File already downloaded'),
+        ),
+      );
+      return;
+    }
+
+    // Download the file
+    http.Client client = http.Client();
+    http.Response response = await client.get(Uri.parse(videoUrl));
+    if (response.statusCode == 200) {
+      // Write file to local storage
+      File videoFile = File(filePath);
+      await videoFile.writeAsBytes(response.bodyBytes);
+
+      // Show success message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File downloaded successfully'),
+        ),
+      );
+    } else {
+      // Show error message if download fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to download file'),
+        ),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    // _downloadVideo(widget.id!, widget.videoTitle, widget.videoName);
+    super.initState();
+   
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
