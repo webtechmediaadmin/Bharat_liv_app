@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 
 class UserProfileController extends GetxController {
   var userProfile = UserProfileModel().obs;
-   RxString selectedGender = ''.obs;
+  RxString selectedGender = ''.obs;
 
   Future<void> fetchUserProfile() async {
     try {

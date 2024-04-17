@@ -8,7 +8,7 @@ import '../routes/api_routes.dart';
 import '../services/speakers_services.dart';
 import '../services/trending_services.dart';
 import '../services/user_profile.dart';
-import 'bottom_nav_screen.dart';
+import 'biography_screen.dart';
 import 'video_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -82,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    print("UserName ${userProfileController.userProfile.value.data?.name}");
     return Scaffold(
       body: Stack(
         children: [
@@ -98,49 +99,51 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
+                    Obx(
+                      () => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
                                 backgroundColor:
-                              const Color(0xffD9D9D9).withOpacity(0.3),
-                              backgroundImage: (userProfileController
-                                          .userProfile.value.data?.image !=
-                                      null)
-                                  ? NetworkImage(
-                                      userProfileController
-                                              .userProfile.value.data?.image ??
-                                          "",
-                                    )
-                                  : const AssetImage(
-                                          'assets/images/user_image.png')
-                                      as ImageProvider, // User image
-                              radius: 25,
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                              "Hi, ${userProfileController.userProfile.value.data?.name ?? "Username"}",
-                              style: TextStyle(
-                                  color: Color(0xffFFFFFF),
-                                  fontSize: 16 // Username text color
-                                  ),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Colors.white, // Notification icon color
+                                    const Color(0xffD9D9D9).withOpacity(0.3),
+                                backgroundImage: (userProfileController
+                                            .userProfile.value.data?.image !=
+                                        null)
+                                    ? NetworkImage(
+                                        userProfileController
+                                                .userProfile.value.data?.image ??
+                                            "",
+                                      )
+                                    : const AssetImage(
+                                            'assets/images/user_image.png')
+                                        as ImageProvider, // User image
+                                radius: 25,
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                "Hi, ${userProfileController.userProfile.value.data?.name ?? "Username"}",
+                                style: TextStyle(
+                                    color: Color(0xffFFFFFF),
+                                    fontSize: 16 // Username text color
+                                    ),
+                              ),
+                            ],
                           ),
-                          onPressed: () {
-                            // Add your notification icon onPressed action here
-                          },
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(
+                              Icons.notifications,
+                              color: Colors.white, // Notification icon color
+                            ),
+                            onPressed: () {
+                              // Add your notification icon onPressed action here
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(
                       height: 10,
@@ -206,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen>
                       height: 20,
                     ),
                     Obx(
-                     () => Center(
+                      () => Center(
                         child: Container(
                           height: 200,
                           decoration: BoxDecoration(
@@ -219,15 +222,16 @@ class _HomeScreenState extends State<HomeScreen>
                                 _currentPage.value = index;
                               });
                             },
-                            itemCount:  trendingController.trendingDataList.length,
+                            itemCount:
+                                trendingController.trendingDataList.length,
                             itemBuilder: (context, index) {
                               return Image.network(
-                                trendingController.trendingDataList[index].thumbNail !=
+                                trendingController.trendingDataList[index]
+                                            .thumbNail !=
                                         null
-                                    ? (
-                                       trendingController.trendingDataList[index].thumbNail!)
-                                    :
-                                "assets/images/banner.png",
+                                    ? (trendingController
+                                        .trendingDataList[index].thumbNail!)
+                                    : "assets/images/banner.png",
                                 fit: BoxFit.contain,
                               );
                             },
@@ -285,27 +289,40 @@ class _HomeScreenState extends State<HomeScreen>
                               itemCount:
                                   speakersController.speakerDataList.length,
                               itemBuilder: (ctx, index) {
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 10),
-                                  child: Column(
-                                    children: [
-                                      Image.network(
-                                        speakersController
-                                            .speakerDataList[index].image!,
-                                        height: 120,
-                                        width: 150,
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            BioGraphScreen(
+                                              id: speakersController.speakerDataList[index].id.toString(),
+                                            ),
                                       ),
-                                      const SizedBox(height: 5),
-                                      Center(
-                                        child: Text(
+                                    );
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(right: 10),
+                                    child: Column(
+                                      children: [
+                                        Image.network(
                                           speakersController
-                                              .speakerDataList[index].name!,
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xffFFFFFF)),
+                                              .speakerDataList[index].image!,
+                                          height: 120,
+                                          width: 150,
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 5),
+                                        Center(
+                                          child: Text(
+                                            speakersController
+                                                .speakerDataList[index].name!,
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xffFFFFFF)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               }),
@@ -318,60 +335,64 @@ class _HomeScreenState extends State<HomeScreen>
                       height: 10,
                     ),
                     Obx(() => SizedBox(
-                      height: 150,
-                      width: double.infinity,
-                      child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount:
-                              trendingController.trendingDataList.length,
-                          itemBuilder: (ctx, index) {
-                            return GestureDetector(
-                                onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>  VideoApp(
-                            id: trendingController
-                                        .trendingDataList[index].id.toString(),
-                            videoTitle:  trendingController
-                                        .trendingDataList[index].video!,  
-                            videoName:  trendingController
-                                        .trendingDataList[index].title!,
-                            mainImage:  trendingController
-                                        .trendingDataList[index].user!.image!,
-                            mainName:  trendingController
-                                        .trendingDataList[index].user!.name!                        
-
-                          ),
-                        ),
-                      );
-                    },
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 10),
-                                child: Column(
-                                  children: [
-                                    Image.network(
-                                      trendingController
-                                          .trendingDataList[index].thumbNail!,
-                                      height: 120,
-                                      width: 150,
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Center(
-                                      child: Text(
-                                        trendingController
-                                          .trendingDataList[index].title!,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xffFFFFFF)),
+                          height: 150,
+                          width: double.infinity,
+                          child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount:
+                                  trendingController.trendingDataList.length,
+                              itemBuilder: (ctx, index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => VideoApp(
+                                            id: trendingController
+                                                .trendingDataList[index].id
+                                                .toString(),
+                                            videoTitle: trendingController
+                                                .trendingDataList[index].video!,
+                                            videoName: trendingController
+                                                .trendingDataList[index].title!,
+                                            mainImage: trendingController
+                                                .trendingDataList[index]
+                                                .user!
+                                                .image!,
+                                            mainName: trendingController
+                                                .trendingDataList[index]
+                                                .user!
+                                                .name!),
                                       ),
+                                    );
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(right: 10),
+                                    child: Column(
+                                      children: [
+                                        Image.network(
+                                          trendingController
+                                              .trendingDataList[index]
+                                              .thumbNail!,
+                                          height: 120,
+                                          width: 150,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Center(
+                                          child: Text(
+                                            trendingController
+                                                .trendingDataList[index].title!,
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xffFFFFFF)),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                    )),
+                                  ),
+                                );
+                              }),
+                        )),
                     _buildText("Recently Viewed", "View All"),
                     const SizedBox(
                       height: 10,
@@ -387,7 +408,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  
   Widget _buildTabContainer(String text) {
     return Container(
       width: text.length * 20,

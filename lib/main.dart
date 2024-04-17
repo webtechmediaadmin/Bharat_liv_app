@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'screens/splash_screen.dart';
+import 'services/bio_services.dart';
 import 'services/categories_services.dart';
 import 'services/speakers_services.dart';
 import 'services/trending_services.dart';
@@ -50,6 +51,7 @@ class MyApp extends StatelessWidget {
         Get.put(CategoriesController());
         Get.put(SpeakersController());
         Get.put(TrendingController());
+        Get.put(BioController());
       }),
       home: const SplashScreen(),
     );

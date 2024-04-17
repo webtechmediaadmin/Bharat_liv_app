@@ -33,6 +33,8 @@ class ApiRoutes {
   static String speakersFetch = "${baseUrl1}api/users?role=manager";
   static String trendingVideosApi = "${baseUrl1}api/content/get-content?highlight=trending";
   static String bannersApi = "${baseUrl1}api/content/get-content";
+  static String bioApi1 = "${baseUrl1}api/users?id=";
+  static String bioApi = "${baseUrl1}api/content/get-content?userID=";
   
   
   
