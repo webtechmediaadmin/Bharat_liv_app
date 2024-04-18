@@ -1,10 +1,9 @@
-import 'dart:ui';
-
 import 'package:bharat_liv/services/categories_services.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../routes/api_routes.dart';
+import '../services/bio_services.dart';
 import '../services/speakers_services.dart';
 import '../services/trending_services.dart';
 import '../services/user_profile.dart';
@@ -21,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   final UserProfileController userProfileController = Get.find();
+  final BioController bioController = Get.find();
   final CategoriesController categoriesController = Get.find();
   final SpeakersController speakersController = Get.find();
   final TrendingController trendingController = Get.find();
@@ -37,10 +37,14 @@ class _HomeScreenState extends State<HomeScreen>
     userProfileController.fetchUserProfile();
     categoriesController.categoriesFetch();
     speakersController.speakersFetch();
+    if (speakersController.speakerDataList.isNotEmpty) {
+      bioController
+          .bioFetchData(speakersController.speakerDataList.first.id.toString());
+    }
     trendingController.trendingFetch(ApiRoutes.trendingVideosApi);
     trendingController.trendingFetch(ApiRoutes.bannerApi, isBanner: true);
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+
     currentIndex = 0;
     // Future.delayed(Duration(seconds: 5), () {
     //   // Check subscription status (example: assuming user hasn't subscribed)
@@ -83,327 +87,353 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     print("UserName ${userProfileController.userProfile.value.data?.name}");
-    return Scaffold(
-      body: Stack(
-        children: [
-          Image.asset(
-            "assets/images/homebg.png",
-            fit: BoxFit.cover,
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 20, left: 15, right: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Obx(
-                      () => Row(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(seconds: 1));
+        userProfileController.fetchUserProfile();
+        categoriesController.categoriesFetch();
+        speakersController.speakersFetch();
+        if (speakersController.speakerDataList.isNotEmpty) {
+          bioController.bioFetchData(
+              speakersController.speakerDataList.first.id.toString());
+        }
+        trendingController.trendingFetch(ApiRoutes.trendingVideosApi);
+        trendingController.trendingFetch(ApiRoutes.bannerApi, isBanner: true);
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Image.asset(
+              "assets/images/homebg.png",
+              fit: BoxFit.cover,
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+            ),
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 15, right: 15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor:
+                                      const Color(0xffD9D9D9).withOpacity(0.3),
+                                  backgroundImage: (userProfileController
+                                              .userProfile.value.data?.image !=
+                                          null)
+                                      ? NetworkImage(
+                                          userProfileController.userProfile
+                                                  .value.data?.image ??
+                                              "",
+                                        )
+                                      : const AssetImage(
+                                              'assets/images/user_image.png')
+                                          as ImageProvider, // User image
+                                  radius: 25,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "Hi, ${userProfileController.userProfile.value.data?.name ?? "Username"}",
+                                  style: TextStyle(
+                                      color: Color(0xffFFFFFF),
+                                      fontSize: 16 // Username text color
+                                      ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications,
+                                color: Colors.white, // Notification icon color
+                              ),
+                              onPressed: () {
+                                // Add your notification icon onPressed action here
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const Text(
+                        "Watch and enjoy \nYour favorite video !",
+                        style: TextStyle(
+                            color: Color(0xffFAFAFA),
+                            fontSize: 20 // Username text color
+                            ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor:
-                                    const Color(0xffD9D9D9).withOpacity(0.3),
-                                backgroundImage: (userProfileController
-                                            .userProfile.value.data?.image !=
-                                        null)
-                                    ? NetworkImage(
-                                        userProfileController
-                                                .userProfile.value.data?.image ??
-                                            "",
-                                      )
-                                    : const AssetImage(
-                                            'assets/images/user_image.png')
-                                        as ImageProvider, // User image
-                                radius: 25,
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                "Hi, ${userProfileController.userProfile.value.data?.name ?? "Username"}",
-                                style: TextStyle(
-                                    color: Color(0xffFFFFFF),
-                                    fontSize: 16 // Username text color
+                          Expanded(
+                            child: Container(
+                              height: 45,
+                              decoration: BoxDecoration(
+                                  color: Color(0xffFFFFFF).withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color:
+                                          Color(0xffFEFEFE).withOpacity(0.2))),
+                              child: const Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.search,
+                                      color: Color(0xffFFFFFF),
                                     ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      "Which is your favorite....",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xffC3C3C3)),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.notifications,
-                              color: Colors.white, // Notification icon color
                             ),
-                            onPressed: () {
-                              // Add your notification icon onPressed action here
-                            },
                           ),
+                          const SizedBox(width: 10),
+                          Container(
+                              height: 45,
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                  color: Color(0xffFFFFFF).withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color:
+                                          Color(0xffFEFEFE).withOpacity(0.2))),
+                              child: Icon(
+                                Icons.mic,
+                                color: Color(0xffFFFFFF),
+                              ))
                         ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text(
-                      "Watch and enjoy \nYour favorite video !",
-                      style: TextStyle(
-                          color: Color(0xffFAFAFA),
-                          fontSize: 20 // Username text color
-                          ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Obx(
+                        () => Center(
                           child: Container(
-                            height: 45,
+                            height: 200,
                             decoration: BoxDecoration(
-                                color: Color(0xffFFFFFF).withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: Color(0xffFEFEFE).withOpacity(0.2))),
-                            child: const Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.search,
-                                    color: Color(0xffFFFFFF),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Text(
-                                    "Which is your favorite....",
-                                    style: TextStyle(
-                                        fontSize: 16, color: Color(0xffC3C3C3)),
-                                  ),
-                                ],
-                              ),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: PageView.builder(
+                              controller: _pageController,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentPage.value = index;
+                                });
+                              },
+                              itemCount:
+                                  trendingController.trendingDataList.length,
+                              itemBuilder: (context, index) {
+                                return Image.network(
+                                  trendingController.trendingDataList[index]
+                                              .thumbNail !=
+                                          null
+                                      ? (trendingController
+                                          .trendingDataList[index].thumbNail!)
+                                      : "assets/images/banner.png",
+                                  fit: BoxFit.contain,
+                                );
+                              },
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Container(
-                            height: 45,
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                color: Color(0xffFFFFFF).withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: Color(0xffFEFEFE).withOpacity(0.2))),
-                            child: Icon(
-                              Icons.mic,
-                              color: Color(0xffFFFFFF),
-                            ))
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Obx(
-                      () => Center(
-                        child: Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: PageView.builder(
-                            controller: _pageController,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage.value = index;
-                              });
-                            },
-                            itemCount:
-                                trendingController.trendingDataList.length,
-                            itemBuilder: (context, index) {
-                              return Image.network(
-                                trendingController.trendingDataList[index]
-                                            .thumbNail !=
-                                        null
-                                    ? (trendingController
-                                        .trendingDataList[index].thumbNail!)
-                                    : "assets/images/banner.png",
-                                fit: BoxFit.contain,
-                              );
-                            },
-                          ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Obx(
+                        () => SizedBox(
+                          height: 50,
+                          width: double.infinity,
+                          child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount:
+                                  categoriesController.categoryDataList.length,
+                              itemBuilder: (ctx, index) {
+                                return Container(
+                                  margin: EdgeInsets.all(5),
+                                  width: 90,
+                                  height: 45,
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xffFFFFFF)
+                                          .withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Color(0xffFEFEFE)
+                                              .withOpacity(0.2))),
+                                  child: Center(
+                                    child: Text(
+                                      categoriesController
+                                          .categoryDataList[index].title!,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xffFFFFFF)),
+                                    ),
+                                  ),
+                                );
+                              }),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Obx(
-                      () => SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount:
-                                categoriesController.categoryDataList.length,
-                            itemBuilder: (ctx, index) {
-                              return Container(
-                                margin: EdgeInsets.all(5),
-                                width: 90,
-                                height: 45,
-                                decoration: BoxDecoration(
-                                    color: const Color(0xffFFFFFF)
-                                        .withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: Color(0xffFEFEFE)
-                                            .withOpacity(0.2))),
-                                child: Center(
-                                  child: Text(
-                                    categoriesController
-                                        .categoryDataList[index].title!,
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Color(0xffFFFFFF)),
-                                  ),
-                                ),
-                              );
-                            }),
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    _buildText("Our Speakers", "View All"),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Obx(() => SizedBox(
-                          height: 150,
-                          width: double.infinity,
-                          child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount:
-                                  speakersController.speakerDataList.length,
-                              itemBuilder: (ctx, index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            BioGraphScreen(
-                                              id: speakersController.speakerDataList[index].id.toString(),
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 10),
-                                    child: Column(
-                                      children: [
-                                        Image.network(
-                                          speakersController
-                                              .speakerDataList[index].image!,
-                                          height: 120,
-                                          width: 150,
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Center(
-                                          child: Text(
-                                            speakersController
-                                                .speakerDataList[index].name!,
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xffFFFFFF)),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }),
-                        )),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    _buildText("Trending Vidoes", "View All"),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Obx(() => SizedBox(
-                          height: 150,
-                          width: double.infinity,
-                          child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount:
-                                  trendingController.trendingDataList.length,
-                              itemBuilder: (ctx, index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => VideoApp(
-                                            id: trendingController
-                                                .trendingDataList[index].id
+                      _buildText("Our Speakers", "View All"),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Obx(() => SizedBox(
+                            height: 150,
+                            width: double.infinity,
+                            child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount:
+                                    speakersController.speakerDataList.length,
+                                itemBuilder: (ctx, index) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => BioGraphScreen(
+                                            id: speakersController
+                                                .speakerDataList[index].id
                                                 .toString(),
-                                            videoTitle: trendingController
-                                                .trendingDataList[index].video!,
-                                            videoName: trendingController
-                                                .trendingDataList[index].title!,
-                                            mainImage: trendingController
-                                                .trendingDataList[index]
-                                                .user!
-                                                .image!,
-                                            mainName: trendingController
-                                                .trendingDataList[index]
-                                                .user!
-                                                .name!),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 10),
-                                    child: Column(
-                                      children: [
-                                        Image.network(
-                                          trendingController
-                                              .trendingDataList[index]
-                                              .thumbNail!,
-                                          height: 120,
-                                          width: 150,
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Center(
-                                          child: Text(
-                                            trendingController
-                                                .trendingDataList[index].title!,
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xffFFFFFF)),
                                           ),
                                         ),
-                                      ],
+                                      );
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(right: 10),
+                                      child: Column(
+                                        children: [
+                                          Image.network(
+                                            speakersController
+                                                .speakerDataList[index].image!,
+                                            height: 120,
+                                            width: 150,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Center(
+                                            child: Text(
+                                              speakersController
+                                                  .speakerDataList[index].name!,
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xffFFFFFF)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }),
-                        )),
-                    _buildText("Recently Viewed", "View All"),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    _buildTrendingVideos(images, itemsText),
-                  ],
+                                  );
+                                }),
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      _buildText("Trending Vidoes", "View All"),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Obx(() => SizedBox(
+                            height: 150,
+                            width: double.infinity,
+                            child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount:
+                                    trendingController.trendingDataList.length,
+                                itemBuilder: (ctx, index) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => VideoApp(
+                                              id: trendingController
+                                                  .trendingDataList[index].id
+                                                  .toString(),
+                                              videoTitle: trendingController
+                                                  .trendingDataList[index]
+                                                  .video!,
+                                              videoName: trendingController
+                                                  .trendingDataList[index]
+                                                  .title!,
+                                              mainImage: trendingController
+                                                  .trendingDataList[index]
+                                                  .user!
+                                                  .image!,
+                                              mainName: trendingController
+                                                  .trendingDataList[index]
+                                                  .user!
+                                                  .name!,
+                                              recommendedVideos:
+                                                  trendingController
+                                                          .trendingDataList ??
+                                                      []),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(right: 10),
+                                      child: Column(
+                                        children: [
+                                          Image.network(
+                                            trendingController
+                                                .trendingDataList[index]
+                                                .thumbNail!,
+                                            height: 120,
+                                            width: 150,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Center(
+                                            child: Text(
+                                              trendingController
+                                                  .trendingDataList[index]
+                                                  .title!,
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xffFFFFFF)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                          )),
+                      _buildText("Recently Viewed", "View All"),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      _buildTrendingVideos(images, itemsText),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

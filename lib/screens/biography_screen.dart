@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bharat_liv/services/bio_services.dart';
+import '../services/trending_services.dart';
 import 'bottom_nav_screen.dart';
+import 'video_screen.dart';
 
 class BioGraphScreen extends StatefulWidget {
   final String id;
@@ -17,27 +19,30 @@ class BioGraphScreen extends StatefulWidget {
 
 class _BioGraphScreenState extends State<BioGraphScreen> {
   final BioController bioController = Get.find();
+    final TrendingController trendingController = Get.find();
+
   bool isExpanded = false;
+  Widget? _content;
 
   @override
   void initState() {
     super.initState();
-     final data = bioController.bioModel.value.data;
+    final data = bioController.bioModel.value.data;
+    print("DATA VALUE $data");
     bioController.userProfileCategoryFetch(widget.id);
-      bioController.bioFetchData(widget.id);
-    if (data != null && data.isNotEmpty
-        ) {
-    
-    } else {
-      const Center(
+
+    if (data == null || data.isEmpty) {
+      _content = const Center(
         child: Text(
-          "No Vidoes",
+          "No Videos",
           style: TextStyle(
             color: Color(0xffFFFFFF),
             fontSize: 22,
           ),
         ),
       );
+    } else {
+      bioController.bioFetchData(widget.id);
     }
   }
 
@@ -122,7 +127,7 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                                     ),
                                   ),
                                   Text(
-                                    "${ bioController.bioModel.value.count ?? 0} Videos",
+                                    "${bioController.bioModel.value.count ?? 0} Videos",
                                     style: const TextStyle(
                                       color: Color(0xffFFFFFF),
                                       fontSize: 14,
@@ -146,19 +151,19 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                         child: Text(
                           isExpanded
                               ? bioController.userProfileCategoryModel.value
-                                              .data?.bio ??
+                                      .data?.bio ??
                                   "bio"
                               : (bioController.userProfileCategoryModel.value
-                                              .data?.bio ??
+                                                  .data?.bio ??
                                               "bio")
                                           .length >=
                                       100
-                                  ? (bioController.userProfileCategoryModel.value
-                                              .data?.bio ??
+                                  ? (bioController.userProfileCategoryModel
+                                              .value.data?.bio ??
                                           "bio")
                                       .substring(0, 100)
                                   : bioController.userProfileCategoryModel.value
-                                              .data?.bio ??
+                                          .data?.bio ??
                                       "bio",
                           style: const TextStyle(
                             color: Color(0xffFFFFFF),
@@ -209,43 +214,60 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Obx(
+                   _content ??  Obx(
                       () => GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          mainAxisSpacing: 8.0,
-                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 6.0,
+                          crossAxisSpacing: 5.0,
                         ),
                         itemCount:
                             bioController.bioModel.value.data?.length ?? 0,
                         itemBuilder: (BuildContext context, int index) {
-                          return GridTile(
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Image.network(
-                                    bioController.bioModel.value.data?[index]
-                                            .thumbNail ??
-                                        "",
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-                                const SizedBox(height: 5.0),
-                                Center(
-                                  child: Text(
-                                    bioController.bioModel.value.data?[index]
-                                            .title ??
-                                        "",
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xffFFFFFF),
+                          return GestureDetector(
+                            onTap: () {
+                               Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => VideoApp(
+                                            id: bioController.bioModel.value.data?[index].id.toString() ?? "",
+                                            videoTitle: bioController.bioModel.value.data?[index].video ?? "",
+                                            videoName: bioController.bioModel.value.data?[index].title ?? "",
+                                            mainImage: bioController.bioModel.value.data?[index].user!.image ?? "",
+                                            mainName: bioController.bioModel.value.data?[index].user!.name ?? "",
+                                            recommendedVideos: bioController.bioModel.value.data ?? [],
+                                                ),
+                                      ),
+                                    );
+                            },
+                            child: GridTile(
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Image.network(
+                                      bioController.bioModel.value.data?[index]
+                                              .thumbNail ??
+                                          "",
+                                      fit: BoxFit.fill,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 5.0),
+                                  Center(
+                                    child: Text(
+                                      bioController.bioModel.value.data?[index]
+                                              .title ??
+                                          "",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xffFFFFFF),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },

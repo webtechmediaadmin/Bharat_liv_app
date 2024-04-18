@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import '../models/trending_model.dart';
+import '../models/bio_models.dart';
 import '../routes/api_routes.dart';
 
 class TrendingController extends GetxController {
 
-  RxList<TrendingData> trendingDataList = <TrendingData>[].obs;
+  RxList<BioData> trendingDataList = <BioData>[].obs;
 
   Future<void> trendingFetch(String apiUrl, {bool isBanner = false}) async {
      try {
@@ -25,7 +25,7 @@ class TrendingController extends GetxController {
         var data = json.decode(response.body);
         print("DATA ---------- $data");
         
-         TrendingModel trendingModel = trendingModelFromJson(json.encode(data));
+         BioModel trendingModel = bioModelFromJson(json.encode(data));
 
         trendingDataList.assignAll(trendingModel.data ?? []);
         EasyLoading.dismiss();

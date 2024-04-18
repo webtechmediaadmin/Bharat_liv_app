@@ -31,6 +31,7 @@ class BioController extends GetxController {
         print("DATA1 ---------- $data");
 
         userProfileCategoryModel(UserProfileModelCategory.fromJson(data));
+        
         EasyLoading.dismiss();
       } else {
         EasyLoading.dismiss();

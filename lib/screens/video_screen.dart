@@ -1,6 +1,6 @@
-
 import 'dart:ui';
 
+import 'package:bharat_liv/models/bio_models.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,13 +15,15 @@ class VideoApp extends StatefulWidget {
   String videoName;
   String mainImage;
   String mainName;
+  List<BioData> recommendedVideos;
   VideoApp(
       {super.key,
       required this.id,
       required this.videoTitle,
       required this.videoName,
       required this.mainImage,
-      required this.mainName});
+      required this.mainName,
+      required this.recommendedVideos});
 
   @override
   _VideoAppState createState() => _VideoAppState();
@@ -32,10 +34,13 @@ class _VideoAppState extends State<VideoApp> {
   late VideoPlayerController _videoPlayerController;
   late ChewieController _chewieController;
   bool bottomSheetShown = false;
+  late List<BioData> filteredVideo;
 
   @override
   void initState() {
-    widget.id;
+    //  widget.id;
+    print("ID's ${widget.id}");
+
     super.initState();
     userProfileController.fetchUserProfile();
     _initializeVideoPlayer();
@@ -55,9 +60,9 @@ class _VideoAppState extends State<VideoApp> {
         _chewieController = ChewieController(
           videoPlayerController: _videoPlayerController,
           aspectRatio: _videoPlayerController.value.aspectRatio,
-          autoPlay: true, // Ensure video auto plays
-          looping: false, // Ensure video doesn't loop
-          allowFullScreen: true, // Allow fullscreen
+          autoPlay: true,
+          looping: false,
+          allowFullScreen: true,
           showControls: true,
         );
         //  _videoPlayerController.play();
@@ -72,8 +77,7 @@ class _VideoAppState extends State<VideoApp> {
     print('Video Duration: $duration, Current Time: $position');
     if (userProfileController.userProfile.value.data?.paidMember != true) {
       if (!bottomSheetShown && position >= const Duration(minutes: 5)) {
-        bottomSheetShown =
-            true; // Set flag to true to indicate that the bottom sheet has been shown
+        bottomSheetShown = true;
         _videoPlayerController.pause().then((value) {
           showPremiumBottomSheet(context);
         });
@@ -81,12 +85,14 @@ class _VideoAppState extends State<VideoApp> {
     }
   }
 
-   
-
-  
-
   @override
   Widget build(BuildContext context) {
+    filteredVideo = widget.recommendedVideos.where((video) {
+      print("Filtered id ${video.id}");
+      return video.id != int.parse(widget.id);
+    }).toList();
+
+    print("FILTERED VIDEO ${widget.id}");
     return Scaffold(
       // Set background color to black
       body: Stack(
@@ -174,25 +180,30 @@ class _VideoAppState extends State<VideoApp> {
                             // Add your notification icon onPressed action here
                           },
                         ),
-                        userProfileController.userProfile.value.data?.paidMember == true ? IconButton(
-                          icon: const Icon(
-                            Icons.download,
-                            color: Colors.white, // Notification icon color
-                          ),
-                          onPressed: () {
-                            print("download");
-                         //  _downloadVideo();
-                             Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BottomNavBar(currentIndex: 2, 
-                                     
-                                  ),
+                        userProfileController
+                                    .userProfile.value.data?.paidMember ==
+                                true
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.download,
+                                  color:
+                                      Colors.white, // Notification icon color
                                 ),
-                              );
-                            // Add your notification icon onPressed action here
-                          },
-                        ): const SizedBox(),
+                                onPressed: () {
+                                  print("download");
+                                  //  _downloadVideo();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BottomNavBar(
+                                        currentIndex: 2,
+                                      ),
+                                    ),
+                                  );
+                                  // Add your notification icon onPressed action here
+                                },
+                              )
+                            : const SizedBox(),
                         IconButton(
                           icon: const Icon(
                             Icons.share,
@@ -205,6 +216,72 @@ class _VideoAppState extends State<VideoApp> {
                       ],
                     ),
                   ],
+                ),
+              ),
+              const Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 15),
+                child: const Text(
+                  "Recommended",
+                  style: TextStyle(
+                    color: Color(0xffFFFFFF),
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 15),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8.0,
+                    crossAxisSpacing: 15.0,
+                  ),
+                  itemCount: filteredVideo.length,
+                  // bioController.bioModel.value.data?.length ?? 0,
+                  itemBuilder: (BuildContext context, int index) {
+                    var video = filteredVideo[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VideoApp(
+                              id: filteredVideo[index].id.toString(),
+                              videoTitle: filteredVideo[index].video.toString(),
+                              videoName: filteredVideo[index].title.toString(),
+                              mainImage: widget.mainImage,
+                              mainName: widget.mainName,
+                              recommendedVideos: widget.recommendedVideos,
+                            ),
+                          ),
+                        );
+                      },
+                      child: GridTile(
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Image.network(
+                                video.thumbNail ?? "",
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                            const SizedBox(height: 5.0),
+                            Center(
+                              child: Text(
+                                video.title ?? "",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xffFFFFFF),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ]),
