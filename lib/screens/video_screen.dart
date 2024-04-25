@@ -239,7 +239,6 @@ class _VideoAppState extends State<VideoApp> {
                     crossAxisSpacing: 15.0,
                   ),
                   itemCount: filteredVideo.length,
-                  // bioController.bioModel.value.data?.length ?? 0,
                   itemBuilder: (BuildContext context, int index) {
                     var video = filteredVideo[index];
                     return GestureDetector(

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../constant/app_preferences.dart';
 import '../services/user_profile.dart';
 import 'auth_screens/login_screen.dart';
+import 'pdf_screen.dart';
 import 'profile/history_screen.dart';
 import 'profile/profile_detail.dart';
 import 'profile/subscription.dart';
@@ -23,7 +24,7 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
   void initState() {
     // TODO: implement initState
     userProfileController.fetchUserProfile();
-
+    userProfileController.fetchPdf();
     super.initState();
   }
 
@@ -304,7 +305,17 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
                       const SizedBox(
                         height: 10,
                       ),
-                      _buildText("assets/images/vec7.png", "About Us"),
+                      GestureDetector(
+                        onTap: () {
+                          print("dknkdnk");
+                            Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PdfViewer(),
+                          ),
+                        );
+                        },
+                        child: _buildText("assets/images/vec7.png", "Terms and Conditions")),
                       const SizedBox(
                         height: 10,
                       ),
@@ -442,4 +453,6 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
       },
     );
   }
-}
+
+
+  }

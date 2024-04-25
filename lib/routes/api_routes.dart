@@ -35,6 +35,7 @@ class ApiRoutes {
   static String bannersApi = "${baseUrl1}api/content/get-content";
   static String bioApi1 = "${baseUrl1}api/users?id=";
   static String bioApi = "${baseUrl1}api/content/get-content?userID=";
+  static String pdfDocumentApi = "${baseUrl1}api/document";
   
   
   

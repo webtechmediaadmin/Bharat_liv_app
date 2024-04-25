@@ -45,7 +45,9 @@ dependencies:
   flutter_easyloading: ^3.0.5
   image_picker:
   path_provider:
-  fluttertoast: 
+  fluttertoast:
+  pdfx: 
+  internet_file:
 
 dev_dependencies:
   flutter_test:

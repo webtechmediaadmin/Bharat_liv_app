@@ -47,8 +47,8 @@ class _OTPScreenState extends State<OTPScreen> {
               style: TextStyle(fontSize: 15, color: Color(0xffABABAB)),
             ),
             Text(
-              "8448686292",
-              style: TextStyle(fontSize: 15, color: Color(0xffE5E3E3)),
+              MyConstant.mobileNumber,
+              style: const TextStyle(fontSize: 15, color: Color(0xffE5E3E3)),
             ),
             const SizedBox(
               height: 10,
