@@ -400,34 +400,36 @@ class _HumbergerScreenState extends State<HumbergerScreen> {
                     ),
                   ),
                   const Divider(),
-                  GestureDetector(
-                    onTap: () {
-                      EasyLoading.show();
-                      Future.delayed(const Duration(seconds: 1), () {
-                        PreferencesApp().removePreferences();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        );
-                        EasyLoading.dismiss();
-                      });
-                    },
-                    child: const Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Text(
-                          'Log out',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Color(0xff890289),
+                    GestureDetector(
+                      onTap: () {
+                        EasyLoading.show();
+                        Future.delayed(const Duration(seconds: 1), () {
+                          PreferencesApp().removePreferences();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                              
+                            ),
+                            (route) => false
+                          );
+                          EasyLoading.dismiss();
+                        });
+                      },
+                      child: const Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Text(
+                            'Log out',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color(0xff890289),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                   const Divider(),
                   GestureDetector(
                     onTap: () {

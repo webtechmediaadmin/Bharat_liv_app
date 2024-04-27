@@ -37,10 +37,7 @@ class _HomeScreenState extends State<HomeScreen>
     userProfileController.fetchUserProfile();
     categoriesController.categoriesFetch();
     speakersController.speakersFetch();
-    if (speakersController.speakerDataList.isNotEmpty) {
-      bioController
-          .bioFetchData(speakersController.speakerDataList.first.id.toString());
-    }
+
     trendingController.trendingFetch(ApiRoutes.trendingVideosApi);
     trendingController.trendingFetch(ApiRoutes.bannerApi, isBanner: true);
     super.initState();
@@ -231,7 +228,9 @@ class _HomeScreenState extends State<HomeScreen>
                       Obx(
                         () => Center(
                           child: Container(
-                            height: 200,
+                            height: 200, // Set the height of the container
+                            width: double
+                                .infinity, // Make sure the container's width matches its parent
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -245,14 +244,19 @@ class _HomeScreenState extends State<HomeScreen>
                               itemCount:
                                   trendingController.trendingDataList.length,
                               itemBuilder: (context, index) {
-                                return Image.network(
-                                  trendingController.trendingDataList[index]
-                                              .thumbNail !=
-                                          null
-                                      ? (trendingController
-                                          .trendingDataList[index].thumbNail!)
-                                      : "assets/images/banner.png",
-                                  fit: BoxFit.contain,
+                                return ClipRRect(
+                                  // ClipRRect to ensure image stays within rounded container
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: Image.network(
+                                    trendingController.trendingDataList[index]
+                                            .thumbNail ??
+                                        "assets/images/banner.png",
+                                    fit: BoxFit.cover,
+                                    width: double
+                                        .infinity, // Set the width of the image to fill the container
+                                    height:
+                                        200, // Set the height of the image to match container height
+                                  ),
                                 );
                               },
                             ),
@@ -311,27 +315,40 @@ class _HomeScreenState extends State<HomeScreen>
                                     speakersController.speakerDataList.length,
                                 itemBuilder: (ctx, index) {
                                   return GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => BioGraphScreen(
-                                            id: speakersController
-                                                .speakerDataList[index].id
-                                                .toString(),
-                                          ),
-                                        ),
-                                      );
+                                    onTap: () async {
+                                      await bioController
+                                          .bioFetchData(speakersController
+                                              .speakerDataList.first.id
+                                              .toString())
+                                          .then((value) => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      BioGraphScreen(
+                                                    id: speakersController
+                                                        .speakerDataList[index]
+                                                        .id
+                                                        .toString(),
+                                                  ),
+                                                ),
+                                              ));
                                     },
                                     child: Container(
                                       margin: const EdgeInsets.only(right: 10),
                                       child: Column(
                                         children: [
-                                          Image.network(
-                                            speakersController
-                                                .speakerDataList[index].image!,
-                                            height: 120,
-                                            width: 150,
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            child: Image.network(
+                                              speakersController
+                                                  .speakerDataList[index]
+                                                  .image!,
+                                              height: 120,
+                                              width: 150,
+                                              fit: BoxFit
+                                                  .cover, // adjust this as needed
+                                            ),
                                           ),
                                           const SizedBox(height: 5),
                                           Center(
