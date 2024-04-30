@@ -19,7 +19,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final List<Widget> _screens = [
     HomeScreen(),
     SearchScreen(),
-    DownloadScreen(),
+   // DownloadScreen(),
     HumbergerScreen(),
   ];
 
@@ -60,8 +60,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
                       children: [
                         buildNavBarItem(0, "assets/images/home.png"),
                         buildNavBarItem(1, "assets/images/search.png"),
-                        buildNavBarItem(2, "assets/images/download.png"),
-                        buildNavBarItem(3, "assets/images/humberger.png"),
+                       // buildNavBarItem(2, "assets/images/download.png"),
+                        buildNavBarItem(2, "assets/images/humberger.png"),
                       ],
                     ),
                   ),

@@ -9,7 +9,6 @@ import '../routes/api_routes.dart';
 class TrendingController extends GetxController {
 
   RxList<BioData> trendingDataList = <BioData>[].obs;
-
   Future<void> trendingFetch(String apiUrl, {bool isBanner = false}) async {
      try {
       EasyLoading.show();

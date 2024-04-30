@@ -219,8 +219,8 @@ class _VideoAppState extends State<VideoApp> {
                 ),
               ),
               const Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 15),
-                child: const Text(
+                padding: EdgeInsets.only(left: 10, right: 10, bottom: 15),
+                child: Text(
                   "Recommended",
                   style: TextStyle(
                     color: Color(0xffFFFFFF),
@@ -235,8 +235,8 @@ class _VideoAppState extends State<VideoApp> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 8.0,
-                    crossAxisSpacing: 15.0,
+                    mainAxisSpacing: 15.0,
+                    crossAxisSpacing: 12.0,
                   ),
                   itemCount: filteredVideo.length,
                   itemBuilder: (BuildContext context, int index) {
@@ -261,9 +261,14 @@ class _VideoAppState extends State<VideoApp> {
                         child: Column(
                           children: [
                             Expanded(
-                              child: Image.network(
-                                video.thumbNail ?? "",
-                                fit: BoxFit.fill,
+                              child: ClipRRect(
+                                 borderRadius: BorderRadius.circular(15),
+                                child: Image.network(
+                                  video.thumbNail ?? "",
+                                   height: double.infinity,
+                                  width: double.infinity,
+                                  fit: BoxFit.fill,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 5.0),

@@ -1,13 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../models/bio_models.dart';
+import '../routes/api_routes.dart';
+import '../services/trending_services.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({Key? key}) : super(key: key);
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final TrendingController trendingController = Get.find();
+
+  TextEditingController searchController = TextEditingController();
+
+  List<BioData> _content = [];
+
+  @override
+  void initState() {
+    super.initState();
+    trendingController.trendingFetch(ApiRoutes.bannerApi, isBanner: true);
+  }
+
+  List<BioData> searchContent(String query) {
+    return trendingController.trendingDataList.where((item) {
+      final title = item.title?.toLowerCase() ?? '';
+      final userName = item.user?.name?.toLowerCase() ?? '';
+      return title.contains(query.toLowerCase()) ||
+          userName.contains(query.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,8 +70,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                     color: Color(0xffFEFEFE).withOpacity(0.2))),
-                            child: const Padding(
-                              padding: const EdgeInsets.all(8.0),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10.0),
                               child: Row(
                                 children: [
                                   Icon(
@@ -55,29 +81,32 @@ class _SearchScreenState extends State<SearchScreen> {
                                   const SizedBox(
                                     width: 10,
                                   ),
-                                  Text(
-                                    "Which is your favorite....",
-                                    style: TextStyle(
-                                        fontSize: 16, color: Color(0xffC3C3C3)),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: searchController,
+                                      style: TextStyle(color: Colors.white),
+                                      decoration: InputDecoration(
+                                          hintText:
+                                              'Which is your favorite....',
+                                          hintStyle:
+                                              TextStyle(color: Colors.white),
+                                          border: InputBorder.none,
+                                          focusedBorder: InputBorder
+                                              .none, // Remove underline color when focused
+                                          enabledBorder: InputBorder.none ),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _content = searchContent(
+                                              searchController.text);
+                                        });
+                                      },
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Container(
-                            height: 45,
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                color: Color(0xffFFFFFF).withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: Color(0xffFEFEFE).withOpacity(0.2))),
-                            child: Icon(
-                              Icons.mic,
-                              color: Color(0xffFFFFFF),
-                            ))
                       ],
                     ),
                     SizedBox(
@@ -133,27 +162,19 @@ class _SearchScreenState extends State<SearchScreen> {
                     SizedBox(
                         height: MediaQuery.of(context).size.height *
                             0.01), // 1% height space
-                    GridView.builder(
+                    ListView.builder(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 10.0, 
-                        crossAxisSpacing: 10.0, 
-                      ),
-                      itemCount: 6,
-                      itemBuilder: (context, index) {
-                        return Stack(
-                          children: [
-                            Image.asset(
-                              "assets/images/rectangle5.png",
-                              fit: BoxFit.contain,
-                            ),
-                          ],
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _content.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final item = _content[index];
+                        return ListTile(
+                          title: Text(item.title.toString()),
+                          subtitle: Text(item.user!.name.toString()),
+                          // Add more content information as needed
                         );
                       },
-                    )
+                    ),
                   ],
                 ),
               ),

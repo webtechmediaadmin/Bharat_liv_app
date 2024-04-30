@@ -8,6 +8,7 @@ import '../services/speakers_services.dart';
 import '../services/trending_services.dart';
 import '../services/user_profile.dart';
 import 'biography_screen.dart';
+import 'bottom_nav_screen.dart';
 import 'video_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -172,55 +173,65 @@ class _HomeScreenState extends State<HomeScreen>
                       const SizedBox(
                         height: 10,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 45,
-                              decoration: BoxDecoration(
-                                  color: Color(0xffFFFFFF).withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                      color:
-                                          Color(0xffFEFEFE).withOpacity(0.2))),
-                              child: const Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.search,
-                                      color: Color(0xffFFFFFF),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text(
-                                      "Which is your favorite....",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Color(0xffC3C3C3)),
-                                    ),
-                                  ],
+                      GestureDetector(
+                        onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BottomNavBar(currentIndex: 1),
+                                ),
+                              );
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 45,
+                                decoration: BoxDecoration(
+                                    color: Color(0xffFFFFFF).withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color:
+                                            Color(0xffFEFEFE).withOpacity(0.2))),
+                                child: const Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.search,
+                                        color: Color(0xffFFFFFF),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text(
+                                        "Which is your favorite....",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            color: Color(0xffC3C3C3)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Container(
-                              height: 45,
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                  color: Color(0xffFFFFFF).withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                      color:
-                                          Color(0xffFEFEFE).withOpacity(0.2))),
-                              child: Icon(
-                                Icons.mic,
-                                color: Color(0xffFFFFFF),
-                              ))
-                        ],
+                            // const SizedBox(width: 10),
+                            // Container(
+                            //     height: 45,
+                            //     padding: const EdgeInsets.all(10),
+                            //     decoration: BoxDecoration(
+                            //         color: Color(0xffFFFFFF).withOpacity(0.3),
+                            //         borderRadius: BorderRadius.circular(10),
+                            //         border: Border.all(
+                            //             color:
+                            //                 Color(0xffFEFEFE).withOpacity(0.2))),
+                            //     child: Icon(
+                            //       Icons.mic,
+                            //       color: Color(0xffFFFFFF),
+                            //     ))
+                          ],
+                        ),
                       ),
                       const SizedBox(
                         height: 20,
@@ -251,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     trendingController.trendingDataList[index]
                                             .thumbNail ??
                                         "assets/images/banner.png",
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.fill,
                                     width: double
                                         .infinity, // Set the width of the image to fill the container
                                     height:
@@ -347,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen>
                                               height: 120,
                                               width: 150,
                                               fit: BoxFit
-                                                  .cover, // adjust this as needed
+                                                  .fill, // adjust this as needed
                                             ),
                                           ),
                                           const SizedBox(height: 5),
@@ -373,8 +384,9 @@ class _HomeScreenState extends State<HomeScreen>
                       const SizedBox(
                         height: 10,
                       ),
-                      Obx(() => SizedBox(
-                            height: 150,
+                      Obx(() => 
+                           SizedBox(
+                            height: 170,
                             width: double.infinity,
                             child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
@@ -412,15 +424,21 @@ class _HomeScreenState extends State<HomeScreen>
                                       );
                                     },
                                     child: Container(
+                                      
+                                      width: 150,
                                       margin: const EdgeInsets.only(right: 10),
                                       child: Column(
                                         children: [
-                                          Image.network(
-                                            trendingController
-                                                .trendingDataList[index]
-                                                .thumbNail!,
-                                            height: 120,
-                                            width: 150,
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(15),
+                                            child: Image.network(
+                                              trendingController
+                                                  .trendingDataList[index]
+                                                  .thumbNail!,
+                                              height: 120,
+                                              width: 150,
+                                              fit: BoxFit.fill
+                                            ),
                                           ),
                                           const SizedBox(height: 5),
                                           Center(
@@ -428,6 +446,8 @@ class _HomeScreenState extends State<HomeScreen>
                                               trendingController
                                                   .trendingDataList[index]
                                                   .title!,
+                                              maxLines: 2, // Adjust this value to limit text to 2 lines
+                                                          overflow: TextOverflow.ellipsis,    
                                               style: const TextStyle(
                                                   fontSize: 12,
                                                   color: Color(0xffFFFFFF)),
@@ -439,11 +459,11 @@ class _HomeScreenState extends State<HomeScreen>
                                   );
                                 }),
                           )),
-                      _buildText("Recently Viewed", "View All"),
+                     
                       const SizedBox(
-                        height: 10,
+                        height: 70,
                       ),
-                      _buildTrendingVideos(images, itemsText),
+                    
                     ],
                   ),
                 ),

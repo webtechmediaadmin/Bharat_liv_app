@@ -19,7 +19,7 @@ class BioGraphScreen extends StatefulWidget {
 
 class _BioGraphScreenState extends State<BioGraphScreen> {
   final BioController bioController = Get.find();
-    final TrendingController trendingController = Get.find();
+  final TrendingController trendingController = Get.find();
 
   bool isExpanded = false;
   Widget? _content;
@@ -65,6 +65,7 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                   vertical: MediaQuery.of(context).size.height * 0.02,
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
@@ -214,65 +215,90 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                   _content ??  Obx(
-                      () => GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 6.0,
-                          crossAxisSpacing: 5.0,
-                        ),
-                        itemCount:
-                            bioController.bioModel.value.data?.length ?? 0,
-                        itemBuilder: (BuildContext context, int index) {
-                          return GestureDetector(
-                            onTap: () {
-                               Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => VideoApp(
-                                            id: bioController.bioModel.value.data?[index].id.toString() ?? "",
-                                            videoTitle: bioController.bioModel.value.data?[index].video ?? "",
-                                            videoName: bioController.bioModel.value.data?[index].title ?? "",
-                                            mainImage: bioController.bioModel.value.data?[index].user!.image ?? "",
-                                            mainName: bioController.bioModel.value.data?[index].user!.name ?? "",
-                                            recommendedVideos: bioController.bioModel.value.data ?? [],
-                                                ),
-                                      ),
-                                    );
-                            },
-                            child: GridTile(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: Image.network(
-                                      bioController.bioModel.value.data?[index]
-                                              .thumbNail ??
-                                          "",
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5.0),
-                                  Center(
-                                    child: Text(
-                                      bioController.bioModel.value.data?[index]
-                                              .title ??
-                                          "",
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xffFFFFFF),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    _content ??
+                        Obx(
+                          () => GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 15.0,
+                              crossAxisSpacing: 12.0,
                             ),
-                          );
-                        },
-                      ),
-                    )
+                            itemCount:
+                                bioController.bioModel.value.data?.length ?? 0,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VideoApp(
+                                        id: bioController
+                                                .bioModel.value.data?[index].id
+                                                .toString() ??
+                                            "",
+                                        videoTitle: bioController.bioModel.value
+                                                .data?[index].video ??
+                                            "",
+                                        videoName: bioController.bioModel.value
+                                                .data?[index].title ??
+                                            "",
+                                        mainImage: bioController.bioModel.value
+                                                .data?[index].user!.image ??
+                                            "",
+                                        mainName: bioController.bioModel.value
+                                                .data?[index].user!.name ??
+                                            "",
+                                        recommendedVideos:
+                                            bioController.bioModel.value.data ??
+                                                [],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: GridTile(
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            150, // Fixed height for the image
+                                        child: AspectRatio(
+                                          aspectRatio: 16 /
+                                              9, // Assuming a common aspect ratio for videos
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            child: Image.network(
+                                              bioController.bioModel.value
+                                                      .data?[index].thumbNail ??
+                                                  "",
+                                              fit: BoxFit
+                                                  .cover, // Maintain aspect ratio and cover the entire container
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5.0),
+                                      Center(
+                                        child: Text(
+                                          bioController.bioModel.value
+                                                  .data?[index].title ??
+                                              "",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xffFFFFFF),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
                   ],
                 ),
               ),
