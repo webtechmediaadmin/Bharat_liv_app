@@ -113,7 +113,7 @@ class _ProfileDetailState extends State<ProfileDetail> {
                            Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BottomNavBar(currentIndex: 3),
+                                  builder: (context) => BottomNavBar(currentIndex: 2),
                                 ),
                               );
                         },

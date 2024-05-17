@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'screens/splash_screen.dart';
 import 'services/bio_services.dart';
 import 'services/categories_services.dart';
+import 'services/like_comments_services.dart';
 import 'services/speakers_services.dart';
 import 'services/trending_services.dart';
 import 'services/user_profile.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
         Get.put(SpeakersController());
         Get.put(TrendingController());
         Get.put(BioController());
+        Get.put(LikeCommentController());
       }),
       home: const SplashScreen(),
     );

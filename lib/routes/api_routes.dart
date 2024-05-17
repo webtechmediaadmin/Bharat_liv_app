@@ -36,6 +36,8 @@ class ApiRoutes {
   static String bioApi1 = "${baseUrl1}api/users?id=";
   static String bioApi = "${baseUrl1}api/content/get-content?userID=";
   static String pdfDocumentApi = "${baseUrl1}api/document";
+  static String likesApi = "${baseUrl1}api/content/like/";
+  static String commentApi = "${baseUrl1}api/content/comment/";
   
   
   

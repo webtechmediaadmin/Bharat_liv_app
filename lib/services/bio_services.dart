@@ -47,6 +47,7 @@ class BioController extends GetxController {
 
 
   var bioModel = BioModel().obs;
+  
  
   Future<void> bioFetchData(String id) async {
     try {
@@ -68,6 +69,12 @@ class BioController extends GetxController {
         print("DATA ---------- $data");
 
         bioModel(BioModel.fromJson(data));
+      //   bioModel.value.data?.forEach((video) {
+      //   int likesCount = video.likes?.length ?? 0;
+      //    likesCounts[video.id!] = likesCount;
+      //   print('Video ID: ${video.id} has $likesCount likes.');
+      // });
+       
         EasyLoading.dismiss();
       } else {
         EasyLoading.dismiss();

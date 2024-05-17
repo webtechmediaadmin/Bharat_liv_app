@@ -153,7 +153,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     const Text(
-                      "Categories",
+                      "Searches",
                       style: TextStyle(
                         color: Color(0xffFFFFFF),
                         fontSize: 16,
@@ -169,8 +169,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemBuilder: (BuildContext context, int index) {
                         final item = _content[index];
                         return ListTile(
-                          title: Text(item.title.toString()),
-                          subtitle: Text(item.user!.name.toString()),
+                          title: Text(item.title.toString(), style: TextStyle(color: Colors.white),),
+                          subtitle: Text(item.user!.name.toString(), style: TextStyle(color: Colors.white)),
                           // Add more content information as needed
                         );
                       },

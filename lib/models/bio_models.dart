@@ -45,12 +45,13 @@ class BioData {
     String? video;
     bool? status;
     String? rating;
-    bool? hasApprovedByAdmin;
     int? count;
     DateTime? createdAt;
     DateTime? updatedAt;
     User? user;
     Category? category;
+    List<Like>? likes;
+    List<Comment>? comments;
 
     BioData({
         this.id,
@@ -61,12 +62,13 @@ class BioData {
         this.video,
         this.status,
         this.rating,
-        this.hasApprovedByAdmin,
         this.count,
         this.createdAt,
         this.updatedAt,
         this.user,
         this.category,
+        this.likes,
+        this.comments,
     });
 
     factory BioData.fromJson(Map<String, dynamic> json) => BioData(
@@ -78,12 +80,13 @@ class BioData {
         video: json["video"],
         status: json["status"],
         rating: json["rating"],
-        hasApprovedByAdmin: json["hasApprovedByAdmin"],
         count: json["count"],
         createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
         updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
         user: json["user"] == null ? null : User.fromJson(json["user"]),
         category: json["category"] == null ? null : Category.fromJson(json["category"]),
+        likes: json["likes"] == null ? [] : List<Like>.from(json["likes"]!.map((x) => Like.fromJson(x))),
+        comments: json["comments"] == null ? [] : List<Comment>.from(json["comments"]!.map((x) => Comment.fromJson(x))),
     );
 
     Map<String, dynamic> toJson() => {
@@ -95,12 +98,13 @@ class BioData {
         "video": video,
         "status": status,
         "rating": rating,
-        "hasApprovedByAdmin": hasApprovedByAdmin,
         "count": count,
         "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt?.toIso8601String(),
         "user": user?.toJson(),
         "category": category?.toJson(),
+        "likes": likes == null ? [] : List<dynamic>.from(likes!.map((x) => x.toJson())),
+        "comments": comments == null ? [] : List<dynamic>.from(comments!.map((x) => x.toJson())),
     };
 }
 
@@ -140,6 +144,46 @@ class Category {
     };
 }
 
+class Comment {
+    int? id;
+    int? userId;
+    int? contentId;
+    String? text;
+    DateTime? createdAt;
+    DateTime? updatedAt;
+    User? user;
+
+    Comment({
+        this.id,
+        this.userId,
+        this.contentId,
+        this.text,
+        this.createdAt,
+        this.updatedAt,
+        this.user,
+    });
+
+    factory Comment.fromJson(Map<String, dynamic> json) => Comment(
+        id: json["id"],
+        userId: json["userID"],
+        contentId: json["contentID"],
+        text: json["text"],
+        createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+        updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
+        user: json["user"] == null ? null : User.fromJson(json["user"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "userID": userId,
+        "contentID": contentId,
+        "text": text,
+        "createdAt": createdAt?.toIso8601String(),
+        "updatedAt": updatedAt?.toIso8601String(),
+        "user": user?.toJson(),
+    };
+}
+
 class User {
     int? id;
     String? name;
@@ -147,19 +191,20 @@ class User {
     dynamic emailOtp;
     bool? isEmailVerified;
     String? password;
-    dynamic phoneNumber;
-    dynamic phoneNumberOtp;
+    String? phoneNumber;
+    String? phoneNumberOtp;
     bool? isNumberVerified;
-    dynamic gender;
+    String? gender;
     String? role;
     String? image;
-    dynamic bio;
+    String? bio;
     dynamic userToken;
     bool? paidMember;
     String? memberCategory;
     int? totalWatchTime;
     dynamic subscriptionDate;
     dynamic expiryDate;
+    dynamic referenceSpeakerName;
     DateTime? createdAt;
     DateTime? updatedAt;
 
@@ -183,6 +228,7 @@ class User {
         this.totalWatchTime,
         this.subscriptionDate,
         this.expiryDate,
+        this.referenceSpeakerName,
         this.createdAt,
         this.updatedAt,
     });
@@ -207,6 +253,7 @@ class User {
         totalWatchTime: json["totalWatchTime"],
         subscriptionDate: json["subscriptionDate"],
         expiryDate: json["expiryDate"],
+        referenceSpeakerName: json["referenceSpeakerName"],
         createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
         updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
     );
@@ -231,6 +278,39 @@ class User {
         "totalWatchTime": totalWatchTime,
         "subscriptionDate": subscriptionDate,
         "expiryDate": expiryDate,
+        "referenceSpeakerName": referenceSpeakerName,
+        "createdAt": createdAt?.toIso8601String(),
+        "updatedAt": updatedAt?.toIso8601String(),
+    };
+}
+
+class Like {
+    int? id;
+    int? userId;
+    int? contentId;
+    DateTime? createdAt;
+    DateTime? updatedAt;
+
+    Like({
+        this.id,
+        this.userId,
+        this.contentId,
+        this.createdAt,
+        this.updatedAt,
+    });
+
+    factory Like.fromJson(Map<String, dynamic> json) => Like(
+        id: json["id"],
+        userId: json["userID"],
+        contentId: json["contentID"],
+        createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+        updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "userID": userId,
+        "contentID": contentId,
         "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt?.toIso8601String(),
     };

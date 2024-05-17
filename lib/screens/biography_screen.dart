@@ -1,3 +1,4 @@
+import 'package:bharat_liv/models/bio_models.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bharat_liv/services/bio_services.dart';
@@ -26,6 +27,7 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
 
   @override
   void initState() {
+    widget.id;
     super.initState();
     final data = bioController.bioModel.value.data;
     print("DATA VALUE $data");
@@ -229,16 +231,23 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                             itemCount:
                                 bioController.bioModel.value.data?.length ?? 0,
                             itemBuilder: (BuildContext context, int index) {
+                              // print(
+                              //     "LIKES ${bioController.bioModel.value.data?[0].likes}");
                               return GestureDetector(
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => VideoApp(
-                                        id: bioController
-                                                .bioModel.value.data?[index].id
-                                                .toString() ??
-                                            "",
+                                        id: bioController.bioModel.value.data !=
+                                                    null &&
+                                                bioController.bioModel.value
+                                                        .data!.length >
+                                                    index ?
+                                                   bioController .bioModel.value
+                                                        .data![index].id
+                                                        .toString() 
+                                            : "",
                                         videoTitle: bioController.bioModel.value
                                                 .data?[index].video ??
                                             "",
@@ -254,6 +263,10 @@ class _BioGraphScreenState extends State<BioGraphScreen> {
                                         recommendedVideos:
                                             bioController.bioModel.value.data ??
                                                 [],
+                                        likes: bioController.bioModel.value
+                                                .data?[index].likes! ??
+                                            [],
+                                        userId: widget.id,
                                       ),
                                     ),
                                   );

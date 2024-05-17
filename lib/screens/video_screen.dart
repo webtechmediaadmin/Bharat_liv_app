@@ -5,7 +5,11 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
+import '../constant/constant.dart';
+import '../services/bio_services.dart';
+import '../services/like_comments_services.dart';
 import '../services/user_profile.dart';
+import 'biography_screen.dart';
 import 'bottom_nav_screen.dart';
 import 'profile/subscription.dart';
 
@@ -13,17 +17,21 @@ class VideoApp extends StatefulWidget {
   String id;
   String videoTitle;
   String videoName;
-  String mainImage;
-  String mainName;
-  List<BioData> recommendedVideos;
+  String? mainImage;
+  String? mainName;
+  List<BioData>? recommendedVideos;
+  List<Like>? likes;
+  String? userId;
   VideoApp(
       {super.key,
       required this.id,
       required this.videoTitle,
       required this.videoName,
-      required this.mainImage,
-      required this.mainName,
-      required this.recommendedVideos});
+      this.mainImage,
+      this.mainName,
+      this.recommendedVideos,
+      this.likes,
+      this.userId});
 
   @override
   _VideoAppState createState() => _VideoAppState();
@@ -31,10 +39,19 @@ class VideoApp extends StatefulWidget {
 
 class _VideoAppState extends State<VideoApp> {
   final UserProfileController userProfileController = Get.find();
+  final LikeCommentController likeCommentController = Get.find();
+  final TextEditingController _commentController = TextEditingController();
+  final BioController bioController = Get.find();
   late VideoPlayerController _videoPlayerController;
   late ChewieController _chewieController;
   bool bottomSheetShown = false;
   late List<BioData> filteredVideo;
+  late List<Like> filteredLikes;
+  final FocusNode _focusNode = FocusNode();
+  bool _isKeyboardVisible = false;
+  final RxBool isCommentEmpty = true.obs;
+
+  Map<String, int> likesCounts = {};
 
   @override
   void initState() {
@@ -43,14 +60,35 @@ class _VideoAppState extends State<VideoApp> {
 
     super.initState();
     userProfileController.fetchUserProfile();
+    bioController.bioFetchData(widget.id);
+
+    filteredVideo = widget.recommendedVideos?.where((video) {
+          print("Filtered id ${video.id}");
+          return video.id != int.parse(widget.id);
+        }).toList() ??
+        [];
+
     _initializeVideoPlayer();
+    _focusNode.addListener(_onFocusChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      likeCommentController.likeCount.value = widget.likes!.length;
+      _checkIfUserHasLiked();
+    });
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
     _videoPlayerController.dispose();
     _chewieController.dispose();
+    _commentController.dispose();
     super.dispose();
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isKeyboardVisible = _focusNode.hasFocus;
+    });
   }
 
   Future<void> _initializeVideoPlayer() async {
@@ -85,14 +123,54 @@ class _VideoAppState extends State<VideoApp> {
     }
   }
 
+  void _checkIfUserHasLiked() {
+    likeCommentController.userHasLiked.value = widget.likes!.any((like) =>
+        like.userId == userProfileController.userProfile.value.data!.id);
+  }
+
+  Future<void> toggleLike(String id) async {
+    // Optimistically update the UI
+    bool newLikeStatus = !likeCommentController.userHasLiked.value;
+    likeCommentController.userHasLiked.value = newLikeStatus;
+    newLikeStatus
+        ? likeCommentController.likeCount.value++
+        : likeCommentController.likeCount.value--;
+
+    try {
+      if (newLikeStatus) {
+        await likeCommentController.likeVideo(id);
+      } else {
+        await likeCommentController.unlikeVideo(id);
+      }
+
+      // Fetch updated likes count
+      await bioController.bioFetchData(widget.id);
+
+      // Update the likes count from the fetched data
+      BioData updatedBioData = bioController.bioModel.value.data?.firstWhere(
+            (data) => data.id.toString() == widget.id,
+            orElse: () => BioData(), // Provide a default BioData object
+          ) ??
+          BioData();
+
+      setState(() {
+        likeCommentController.likeCount.value =
+            updatedBioData.likes?.length ?? 0;
+        print("COUNT ${likeCommentController.likeCount.value}");
+      });
+    } catch (error) {
+      // Revert the optimistic update in case of an error
+      likeCommentController.userHasLiked.value = !newLikeStatus;
+      newLikeStatus
+          ? likeCommentController.likeCount.value--
+          : likeCommentController.likeCount.value++;
+      print('Error toggling like: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    filteredVideo = widget.recommendedVideos.where((video) {
-      print("Filtered id ${video.id}");
-      return video.id != int.parse(widget.id);
-    }).toList();
-
-    print("FILTERED VIDEO ${widget.id}");
+    print("LIKES ${likeCommentController.userHasLiked.value}");
     return Scaffold(
       // Set background color to black
       body: Stack(
@@ -112,7 +190,12 @@ class _VideoAppState extends State<VideoApp> {
                 padding: const EdgeInsets.only(left: 15, top: 15, bottom: 15),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => BioGraphScreen(
+                                  id: widget.userId.toString(),
+                                )));
                   },
                   child: const Icon(
                     Icons.arrow_back_ios,
@@ -152,12 +235,12 @@ class _VideoAppState extends State<VideoApp> {
                           backgroundColor:
                               const Color(0xffD9D9D9).withOpacity(0.3),
                           backgroundImage: (widget.mainImage != null)
-                              ? NetworkImage(widget.mainImage)
+                              ? NetworkImage(widget.mainImage!)
                               : const AssetImage('assets/images/user_image.png')
                                   as ImageProvider, // User image
                           radius: 25,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                         ),
                         Text(
@@ -218,13 +301,476 @@ class _VideoAppState extends State<VideoApp> {
                   ],
                 ),
               ),
+              Padding(
+                  padding: EdgeInsets.only(left: 10, right: 10, bottom: 15),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                //margin: EdgeInsets.all(5),
+                                padding: const EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color(0xffFFFFFF).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                child: Obx(() => Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            print("vIdEo ${widget.id}");
+                                            toggleLike(widget.id);
+                                          },
+                                          child: Image.asset(
+                                            likeCommentController
+                                                    .userHasLiked.value
+                                                ? "assets/images/likr.png"
+                                                : "assets/images/like.png",
+                                            key: ValueKey(likeCommentController
+                                                .userHasLiked.value),
+                                            height: 22,
+                                            width: 22,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        const Text(
+                                          "Like",
+                                          style: TextStyle(
+                                              fontSize: 15,
+                                              color: Color(0xffFFFFFF)),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Obx(() => Text(
+                                              likeCommentController
+                                                  .likeCount.value
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                color: Color(0xffFFFFFF),
+                                              ),
+                                            )),
+                                      ],
+                                    )),
+                              )
+                            ],
+                          ),
+                          const SizedBox(width: 10),
+                          Row(
+                            children: [
+                              Container(
+                                //margin: EdgeInsets.all(5),
+                                padding: const EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color(0xffFFFFFF).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Image.asset("assets/images/share.png",
+                                        height: 15, width: 18),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      "Share",
+                                      style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xffFFFFFF)),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () {
+                          FocusScope.of(context).unfocus();
+                          showModalBottomSheet(
+                            backgroundColor: Colors.transparent,
+                            context: context,
+                            builder: (context) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      spreadRadius: 7,
+                                      blurRadius: 6,
+                                      offset: Offset(
+                                          3, 0), // changes position of shadow
+                                    ),
+                                  ],
+                                  color: Colors.black.withOpacity(0.1),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20.0),
+                                    topRight: Radius.circular(20.0),
+                                  ),
+                                ),
+                                child: ClipPath(
+                                  clipper: MyCustomClipper1(),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                        sigmaY: 17, sigmaX: 17),
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                            .viewInsets
+                                            .bottom,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                left: 15.0, top: 10.0),
+                                            child: Text(
+                                              "Comments",
+                                              style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            height: 1,
+                                            color: Colors.white.withOpacity(
+                                                0.2), // Opacity added to color
+                                          ),
+                                          Obx(
+                                            () => Expanded(
+                                              child: ListView.builder(
+                                                shrinkWrap: true,
+                                                itemCount: bioController
+                                                    .bioModel
+                                                    .value
+                                                    .data!
+                                                    .first
+                                                    .comments!
+                                                    .length,
+                                                itemBuilder: (context, index) {
+                                                  return Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      children: [
+                                                        CircleAvatar(
+                                                          backgroundColor:
+                                                              const Color(
+                                                                      0xffD9D9D9)
+                                                                  .withOpacity(
+                                                                      0.3),
+                                                          backgroundImage: (bioController
+                                                                      .bioModel
+                                                                      .value
+                                                                      .data![0]
+                                                                      .comments![
+                                                                          index]
+                                                                      .user!
+                                                                      .image !=
+                                                                  null)
+                                                              ? NetworkImage(
+                                                                  bioController
+                                                                      .bioModel
+                                                                      .value
+                                                                      .data![0]
+                                                                      .comments![
+                                                                          index]
+                                                                      .user!
+                                                                      .image!)
+                                                              : const AssetImage(
+                                                                      'assets/images/user_image.png')
+                                                                  as ImageProvider, // User image
+                                                          radius: 18,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 10,
+                                                        ),
+                                                        Text(
+                                                          bioController
+                                                                      .bioModel
+                                                                      .value
+                                                                      .data![0]
+                                                                      .comments![
+                                                                          index]
+                                                                      .text !=
+                                                                  null
+                                                              ? bioController
+                                                                  .bioModel
+                                                                  .value
+                                                                  .data![0]
+                                                                  .comments![
+                                                                      index]
+                                                                  .text!
+                                                              : "",
+                                                          style: const TextStyle(
+                                                              color: Color(
+                                                                  0xffFFFFFF),
+                                                              fontSize:
+                                                                  16 // Username text color
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            height: 1,
+                                            color: Colors.white30.withOpacity(
+                                                0.2), // Opacity added to color
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: Colors.black
+                                                            .withOpacity(0.5),
+                                                        width: 1.0),
+                                                  ),
+                                                  child: CircleAvatar(
+                                                    backgroundColor:
+                                                        const Color(0xffD9D9D9)
+                                                            .withOpacity(0.3),
+                                                    backgroundImage: (widget
+                                                                .mainImage !=
+                                                            null)
+                                                        ? NetworkImage(
+                                                            widget.mainImage!)
+                                                        : const AssetImage(
+                                                                'assets/images/user_image.png')
+                                                            as ImageProvider, // User image
+                                                    radius: 15,
+                                                    // Border color
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: TextField(
+                                                      focusNode: _focusNode,
+                                                      controller:
+                                                          _commentController,
+                                                      onChanged: (value) {
+                                                        isCommentEmpty.value =
+                                                            value
+                                                                .trim()
+                                                                .isEmpty;
+                                                      },
+                                                      decoration:
+                                                          InputDecoration(
+                                                              hintText:
+                                                                  "Add a comment...",
+                                                              hintStyle: TextStyle(
+                                                                  color: Colors
+                                                                      .white),
+                                                              filled: true,
+                                                              fillColor: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                      0.3), // Grey background color with transparency
+                                                              border:
+                                                                  OutlineInputBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10.0), // Border radius
+                                                                borderSide:
+                                                                    BorderSide
+                                                                        .none, // No border
+                                                              ),
+                                                              contentPadding:
+                                                                  EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          10.0,
+                                                                      vertical:
+                                                                          0.0) // No border
+
+                                                              ),
+                                                      style: const TextStyle(
+                                                          color: Colors.white)),
+                                                ),
+                                                Obx(
+                                                  () => Visibility(
+                                                    visible: _isKeyboardVisible,
+                                                    child: IconButton(
+                                                      icon: isCommentEmpty.value
+                                                          ? Icon(
+                                                              Icons
+                                                                  .send_outlined,
+                                                              color:
+                                                                  Colors.white,
+                                                            )
+                                                          : Icon(
+                                                              Icons.send,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                      // Inside your onPressed callback for the send button
+                                                      onPressed:
+                                                          isCommentEmpty.value
+                                                              ? null
+                                                              : () async {
+                                                                  print(
+                                                                      "COMMENT ${_commentController.text}");
+                                                                  if (_commentController
+                                                                          .text
+                                                                          .isEmpty ||
+                                                                      _commentController
+                                                                          .text
+                                                                          .trim()
+                                                                          .isEmpty) {
+                                                                    showToast(
+                                                                        "User comment should not be empty!");
+                                                                  } else {
+                                                                    // Call the API to post the comment
+                                                                    await likeCommentController
+                                                                        .fetchComment(
+                                                                            widget
+                                                                                .id,
+                                                                            _commentController
+                                                                                .text)
+                                                                        .then(
+                                                                            (_) {
+                                                                      // Show a toast message indicating success
+                                                                      showToast(
+                                                                          "Comment posted successfully!");
+                                                                      // Clear the text field
+                                                                      _commentController
+                                                                          .clear();
+                                                                      // Hide the keyboard
+                                                                      FocusScope.of(
+                                                                              context)
+                                                                          .unfocus();
+                                                                      // Optionally, fetch updated data or perform any other actions
+                                                                      bioController
+                                                                          .bioFetchData(
+                                                                              widget.id);
+                                                                    }).catchError(
+                                                                            (error) {
+                                                                      // Handle errors if necessary
+                                                                      print(
+                                                                          "Error posting comment: $error");
+                                                                      // Show a toast message indicating failure
+                                                                      showToast(
+                                                                          "Failed to post comment. Please try again later.");
+                                                                    });
+                                                                  }
+                                                                },
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          SizedBox(height: 20),
+                                          // ElevatedButton(
+                                          //   onPressed: () {
+                                          //     if (_commentController
+                                          //         .text.isNotEmpty) {
+                                          //       setState(() {
+                                          //         comments
+                                          //             .add(_commentController.text);
+                                          //         _commentController.clear();
+                                          //       });
+                                          //     }
+                                          //   },
+                                          //   child: Text("Post Comment"),
+                                          // ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: Container(
+                          //margin: EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffFFFFFF).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Obx(() {
+                            final comments = bioController.bioModel.value.data
+                                ?.expand((entry) => entry.comments!)
+                                .toList();
+                            if (comments != null && comments.isNotEmpty) {
+                              final comment = comments.first;
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: const Color(0xffD9D9D9)
+                                        .withOpacity(0.3),
+                                    backgroundImage: comment.user!.image != null
+                                        ? NetworkImage(comment.user!.image!)
+                                        : const AssetImage(
+                                                'assets/images/user_image.png')
+                                            as ImageProvider, // User image
+                                    radius: 25,
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      comment.text ?? "",
+                                      maxLines: 2, // Limit text to 2 lines
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Color(0xffFFFFFF),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return const Text(
+                                "No comments available",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xffFFFFFF),
+                                ),
+                              );
+                            }
+                          }),
+                        ),
+                      )
+                    ],
+                  )),
               const Padding(
                 padding: EdgeInsets.only(left: 10, right: 10, bottom: 15),
-                child: Text(
-                  "Recommended",
-                  style: TextStyle(
-                    color: Color(0xffFFFFFF),
-                    fontSize: 16,
+                child: Center(
+                  child: Text(
+                    "Recommended",
+                    style: TextStyle(
+                      color: Color(0xffFFFFFF),
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -241,19 +787,27 @@ class _VideoAppState extends State<VideoApp> {
                   itemCount: filteredVideo.length,
                   itemBuilder: (BuildContext context, int index) {
                     var video = filteredVideo[index];
+
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
+                      onTap: () async {
+                        // toggleLike(filteredVideo[index].id.toString());
+                        print("RECOMMENDED VIDEO ID ${video.id}");
+                        print("MAIN ID ${widget.id}");
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => VideoApp(
-                              id: filteredVideo[index].id.toString(),
-                              videoTitle: filteredVideo[index].video.toString(),
-                              videoName: filteredVideo[index].title.toString(),
-                              mainImage: widget.mainImage,
-                              mainName: widget.mainName,
-                              recommendedVideos: widget.recommendedVideos,
-                            ),
+                                id: filteredVideo[index].id.toString(),
+                                videoTitle:
+                                    filteredVideo[index].video.toString(),
+                                videoName:
+                                    filteredVideo[index].title.toString(),
+                                mainImage: widget.mainImage,
+                                mainName: widget.mainName,
+                                recommendedVideos: widget.recommendedVideos,
+                                likes: filteredVideo[index].likes!
+                                // likes: widget.recommendedVideos[index].likes!
+                                ),
                           ),
                         );
                       },
@@ -262,10 +816,10 @@ class _VideoAppState extends State<VideoApp> {
                           children: [
                             Expanded(
                               child: ClipRRect(
-                                 borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(15),
                                 child: Image.network(
                                   video.thumbNail ?? "",
-                                   height: double.infinity,
+                                  height: double.infinity,
                                   width: double.infinity,
                                   fit: BoxFit.fill,
                                 ),
@@ -390,5 +944,25 @@ class _VideoAppState extends State<VideoApp> {
       bottomSheetShown =
           false; // Reset the flag when the bottom sheet is closed
     });
+  }
+}
+
+class MyCustomClipper1 extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height - 30); // Adjust this value as needed
+    path.quadraticBezierTo(size.width / 2, size.height, 0,
+        size.height - 30); // Adjust this value as needed
+    path.lineTo(0, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return true;
   }
 }
